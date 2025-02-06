@@ -12,7 +12,7 @@ fi
     str build_type 'full'
 
     str source 'src/pasfetch.pas'
-    
+
     list str targets 'debug', 'release'
     str default 'debug'
   end
