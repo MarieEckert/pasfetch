@@ -1,7 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-mkdir -p out
-rm -rf out/*
+mkdir -p obj
 
 if [[ $1 == debug ]]; then
   fpc src/pasfetch.pas -FE"out/" -Fu"inc/" -g -dDEBUG
