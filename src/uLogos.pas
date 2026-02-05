@@ -1,4 +1,4 @@
-unit Logos;
+unit uLogos;
 
 interface
     uses uAnsiCrt;

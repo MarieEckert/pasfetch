@@ -1,6 +1,4 @@
-{$ifndef dcc}
-  {$mode delphi}
-{$endif}
+{$mode objfpc}
 program pasfetch;
 
 { pasfetch.pas ; System Fetcher written in Freepascal/Delphi }
@@ -13,301 +11,267 @@ program pasfetch;
 { rewrite this at sometime in the future. If anyone else has }
 { the motivation to do so, feel free to do it :)             }
 
-uses Classes, Dos, IniFiles, Logos, Math, Process, StrUtils, SysUtils, Types, uAnsiCrt;
+{$H+} {$CodePage UTF8}
+{$ScopedEnums On} {$WriteableConst Off}
 
-var
-    FConfig: TIniFile;
-    FSpacing: String;
-    FPrintColor: boolean;
-    FInfoLabelStyle: byte; // default tsBold
-    FInfoTextStyle: byte;  // default tsResetAll
-    FLogoStyle: byte;      // default tsResetAll
-    FUserAtMachine: boolean;
-    FOSName: String;
-    FWantedInfos: TStringDynArray;
-    FInfos: TStringDynArray;
-    FLongest: Integer;
-    FTmpFile: TextFile;
-    FLogo: TStringDynArray;
-    FFormatString: String;
-    tmp: TStringDynArray;
-    i: Integer;
-    FConfigPath: String;
+uses
+	GetOpts,
+	uLogos,
+	uInfo,
+	SysUtils,
+	StrUtils,
+	Types;
 
-function Uptime: String;
-var
-    res: String;
-begin
-    result := 'Not Found';
-    if (RunCommand('uptime', ['-p'], res)) then
-        exit(StringReplace(SplitString(res, 'up ')[1], sLineBreak, '', [rfReplaceAll]));
-end;
+const VERSION = '2.0.0';
 
-function PkgCount: String;
-var
-    res: String;
-begin
-    // Any pkg count query that requries a pipe isnt added because i cant figure out
-    // how to do pipes in Pascal.
-    if (FOSName = '"Arch Linux"') or (FOSName = '"Arch bang Linux"') 
-    or (FOSName = '"ArcoLinux"') or (FOSName = '"Artix Linux"') or (FOSName = '"Arch7"') then
-    begin
-        if (RunCommand('pacman', ['-Qq'], res)) then
-            exit(IntToStr(Length(SplitString(res, sLineBreak))-1))
-    end
-    else if (FOSName = '"Alpine Linux"') then
-    begin
-        if (RunCommand('grep', ['''P:''', '/lib/apk/db/installed'], res)) then
-            exit(IntToStr(Length(SplitString(res, sLineBreak))-1))
-    end
-    else if (FOSName = '"Gentoo"') then
-    begin
-        if (RunCommand('qlist', ['-IRv'], res)) then
-            exit(IntToStr(Length(SplitString(res, sLineBreak))-1))
-    end
-    else if (FOSName = '"Ubuntu"') then
-    begin
-        if (RunCommand('dpkg', ['--list', '--no-pager'], res)) then
-            exit(IntToStr(Length(SplitString(res, sLineBreak))-1))
-    end;
+type
+	TColor = (Black,
+			  Red,
+			  Green,
+			  Yellow,
+			  Blue,
+			  Magenta,
+			  Cyan,
+			  White,
+			  BrightBlack,
+			  BrightRed,
+			  BrightGreen,
+			  BrightYellow,
+			  BrightBlue,
+			  BrightMagenta,
+			  BrightCyan,
+			  BrightWhite);
 
-    exit('Not Found');
-end;
+	TStyle = (Normal,
+			  Bold,
+			  Dim,
+			  Italic,
+			  Underline,
+			  SlowBlink,
+			  RapidBlink,
+			  Reverse);
 
-function UName(const param: String): String;
-var
-    res: String;
-begin
-    result := 'Not Found';
-    if (RunCommand('uname', [param], res)) then
-        exit(StringReplace(res, sLineBreak, '', [rfReplaceAll]));
-end;
+	TStyles = set of TStyle;
 
-function CPUString: String;
-{$IF defined(LINUX)}
-var
-    s: String;
-    split: TStringDynArray;
-{$ENDIF}
-begin
-  {$IF defined(LINUX)}
-    AssignFile(FTmpFile, '/proc/cpuinfo');
-    Reset(FTmpFile);
-    while not eof(FTmpFile) do
-    begin
-        readln(FTmpFile, s);
-        split := SplitString(SplitString(s, ':')[0], ' ');
-        if (split[0]= 'model') then
-        begin
-            s := SplitString(s, ':')[1];
-            exit(Copy(s, 2, Length(s)-1)); // Strip Leading space
-        end;
-    end;
+	TLogo = (Auto, Arch);
 
-    CloseFile(FTmpFile);
-    exit('Not Found');
-  {$ELSEIF defined(DARWIN)}
-    if not (RunCommand('sysctl', ['-n', 'machdep.cpu.brand_string'], result)) then
-      exit('Not Found');
+	TExecOpts = record
+		config		: String;
+		infos		: TStringDynArray;
+		logo		: TLogo;
+		color		: TColor;
+		infoStyles	: TStyles;
+		textStyles	: TStyles;
+		logoStyles	: TStyles;
+	end;
 
-    result := StringReplace(result, sLineBreak, '', [rfReplaceAll]);
-  {$ENDIF}
-end;
-
-function MemoryUsageString: String;
-{$IF defined(LINUX)}
-var
-    s, total: String;
-    free: Integer;
-    split: TStringDynArray;
-{$ENDIF}
-begin
-  {$IF defined(LINUX)}
-    AssignFile(FTmpFile, '/proc/meminfo');
-    Reset(FTmpFile);
-
-    total := '0';
-    free := 0;
-
-    while not eof(FTmpFile) do
-    begin
-        readln(FTmpFile, s);
-        split := SplitString(s, ':');
-        if (split[0] = 'MemTotal') then
-            total := SplitString(StringReplace(split[1], ' ', '', [rfReplaceAll]), 'k')[0]
-        else if (split[0] = 'MemFree') then 
-            free := StrToInt(SplitString(StringReplace(split[1], ' ', '', [rfReplaceAll]), 'k')[0]);
-    end;
-
-    CloseFile(FTmpFile);
-    exit(IntToStr(StrToInt(total)-free)+' / '+total+' kB');
-  {$ELSEIF defined(DARWIN)}
-    exit('coming soon to macos');
-  {$ENDIF}
-end;
-
-function GetOsName: String;
-{$IF defined(LINUX)}
-var
-    s, res: String;
-    split: TStringDynArray;
-{$ENDIF}
-begin
-  {$IF defined(LINUX)}
-    if FileExists('/etc/os-release') then
-        AssignFile(FTmpFile, '/etc/os-release')
-    else
-        AssignFile(FTmpFile, '/etc/release');
-
-    Reset(FTmpFile);
-
-    res := '';
-    while not eof(FTmpFile) do
-    begin
-        readln(FTmpFile, s);
-        split := SplitString(s, '=');
-        if (split[0] = 'NAME') then res := split[1];
-    end;
-
-    CloseFile(FTmpFile);
-    exit(res);
-  {$ELSEIF defined(DARWIN)}
-    exit('MacOS');
-  {$ENDIF}
-end;
-
-function GetHost: String;
-{$IF defined(LINUX)}
+function ParseColor(const str: String): TColor;
 const
-    PATH = '/sys/devices/virtual/dmi/id/product_name';
+	NAMES: array [TColor] of String = (
+		'black',
+		'red',
+		'green',
+		'yellow',
+		'blue',
+		'magenta',
+		'cyan',
+		'white',
+		'brightblack',
+		'brightred',
+		'brightgreen',
+		'brightyellow',
+		'brightblue',
+		'brightmagenta',
+		'brightcyan',
+		'brightwhite'
+	);
 var
-    s: String;
-{$ENDIF}
+	color: TColor;
 begin
-{$IF defined(LINUX)}
-    if not FileExists(PATH) then
-      exit('unknown');
+	for color := Low(TColor) to High(TColor) do
+		if str = NAMES[color] then
+			exit(color);
 
-    AssignFile(FTmpFile, PATH);
-    Reset(FTMPFile);
-    readln(FTmpFile, s);
-    CloseFile(FTmpFile);
-    exit(s);
-{$ELSE}
-    exit('unknown');
-{$ENDIF}
+	WriteLn(StdErr, 'error: unknown color "', str, '"');
+	Halt(3);
 end;
 
+function ParseStyle(const str: String): TStyle;
+const
+	NAMES: array [TStyle] of String = (
+		'normal',
+		'bold',
+		'dim',
+		'italic',
+		'underline',
+		'slowblink',
+		'rapidblink',
+		'reverse'
+	);
+var
+	style: TStyle;
 begin
-    if (ParamStr(1) = '-h') or (ParamStr(1) = '--help') then
-    begin
-        writeln('pasfetch - System Information Fetcher written in Pascal.');
-        writeln();
-        writeln('Usage: pasfetch');
-        writeln('Config: ${XDG_CONFIG_HOME:-$HOME/.config}/pasfetch/config.ini (created on first run)');
-        writeln('Supported Infos:');
-        writeln('- All Environment Variables');
-        writeln('- fl:OS     Operating System');
-        writeln('- fl:KERNEL Kernel Version');
-        writeln('- fl:UPTIME Systems Uptime');
-        writeln('- fl:MEM    Memory Usage');
-        writeln('- fl:CPU    CPU Model Name');
-        writeln('- fl:PKGS   Package Count');
-        halt;
-    end;
+	for style := Low(TStyle) to High(TStyle) do
+		if str = NAMES[style] then
+			exit(style);
 
-    FOSName := GetOsName();
-    FLogo := SplitString(Logos.GetLogo(FOSName), sLineBreak);
-    SetLength(FSpacing, Length(FLogo[0]));
-    for i := 1 to Length(FSpacing) do
-      FSpacing[i] := ' ';
+	WriteLn(StdErr, 'error: unknown style "', str, '"');
+	Halt(3);
+end;
 
-    if GetEnv('XDG_CONFIG_HOME') <> '' then
-        FConfigPath := GetEnv('XDG_CONFIG_HOME')+'/pasfetch/config.ini'
-    else 
-        FConfigPath := GetEnv('HOME')+'/.config/pasfetch/config.ini';
-    
-    FConfig := TIniFile.Create(FConfigPath);
+function ParseStyleList(const str: String): TStyles;
+var
+	currentPos	: Integer;
+	commaPos	: Integer;
+begin
+	currentPos := 1;
+	result := [];
+	repeat
+		commaPos := Pos(',', str, currentPos);
+		if commaPos = 0 then
+			commaPos := Length(str) + 1;
+		result += [ParseStyle(Copy(str, currentPos, commaPos - currentPos))];
+		currentPos := commaPos + 1;
+	until currentPos > Length(str);
+end;
 
-    if not FileExists(FConfigPath) then
-    begin
-        writeln('No config File present, creating...');
-        FConfig.WriteBool('PASFETCH', 'color', True);
-        FConfig.WriteBool('PASFETCH', 'useratmachine', True);
-        FConfig.WriteString('PASFETCH', 'INFOS', 'fl:OS fl:KERNEL env:SHELL');
-        writeln('Created '+FConfigPath);
-    end;
+function ParseLogo(const str: String): TLogo;
+begin
+	{ TODO }
+end;
 
-    FUserAtMachine := FConfig.ReadBool('PASFETCH', 'useratmachine', True);
-    FWantedInfos := SplitString(FConfig.ReadString('PASFETCH', 'INFOS', 'fl:OS fl:KERNEL env:SHELL'), ' ');
+procedure ShowHelp;
+const
+	{ The indentation here is fine, just to help with not exceeding 80 columns
+	  in the code or the final help text output.
+	}
+	TEXT: array of String = (
+'pasfetch version ' + VERSION,
+'Copyright (c) 2026,  Marie Eckert',
+'Licensed under the ISC License.',
+'',
+'USAGE: pasfetch',
+'       pasfetch OPTIONS...',
+'',
+'    System fetch program written in pascal',
+'',
+'OPTIONS',
+'    -h, --help',
+'        Show this help text.',
+'    --config [CONFIG]',
+'        Use a configuration file and ignore these command line parameters.',
+'        A path to the configuration file can be provided, overwise pasfetch',
+'        will try its best to find a configuration file itself',
+'    -c',
+'        Disable colored output. This takes precedence over -C',
+'    -C <COLOR>',
+'        Set which color should be used for colored output',
+'    -i <INFOS>',
+'        Comma seperated list of information to be displayed. See pafetch(1)',
+'        for more information.',
+'    --info-style <STYLES>',
+'        Comma seperated list specifying how to style information labels.',
+'        See pasfetch(1) for more information.',
+'    --text-style <STYLES>',
+'        Comma seperated list specifying how to style information text.',
+'        See pasfetch(1) for more information.',
+'    --logo-style <STYLES>',
+'        Comma seperated list specifying how to style the logo.',
+'        See pasfetch(1) for more information.'
+);
+var
+	s: String;
+begin
+	for s in TEXT do
+		WriteLn(StdErr, s);
+	Halt;
+end;
 
-    FPrintColor := FConfig.ReadBool('PASFETCH', 'color', True);
-    Logos.FOverrideColor := FConfig.ReadInteger('PASFETCH', 'overridecolor', 0);
-    FInfoLabelStyle := FConfig.ReadInteger('PASFETCH', 'infolabelstyle', tsBold);
-    FInfoTextStyle := FConfig.ReadInteger('PASFETCH', 'infotextstyle', tsResetAll);
-    FLogoStyle := FConfig.ReadInteger('PASFETCH', 'logostyle', tsResetAll);
+procedure ParseOpts(var execOpts: TExecOpts);
+const
+	CONFIG_OPT		= 2;
+	INFO_STYLE_OPT	= 3;
+	TEXT_STYLE_OPT	= 4;
+	LOGO_STYLE_OPT	= 5;
+	LOGO_OPT		= 6;
+var
+	ch		: Char;
+	optIx	: LongInt;
+	opts	: array [1..6] of TOption;
+begin
+	execOpts := Default(TExecOpts);
 
-    FConfig.Free;
-    //['fl:OS', 'fl:KERNEL', 'env:SHELL', 'env:USER', 'fl:UPTIME', 'fl:MEM'];
-    SetLength(FInfos, Length(FWantedInfos));
+	with opts[1] do
+	begin
+		name	:= 'help';
+		has_arg	:= 0;
+		flag	:= Nil;
+		value	:= #0;
+	end;
+	with opts[CONFIG_OPT] do
+	begin
+		name	:= 'config';
+		has_arg	:= Optional_Argument;
+		flag	:= Nil;
+		value	:= #0;
+	end;
+	with opts[INFO_STYLE_OPT] do
+	begin
+		name	:= 'info-style';
+		has_arg	:= 1;
+		flag	:= Nil;
+		value	:= #0;
+	end;
+	with opts[TEXT_STYLE_OPT] do
+	begin
+		name	:= 'text-style';
+		has_arg	:= 1;
+		flag	:= Nil;
+		value	:= #0;
+	end;
+	with opts[LOGO_STYLE_OPT] do
+	begin
+		name	:= 'logo-style';
+		has_arg	:= 1;
+		flag	:= Nil;
+		value	:= #0;
+	end;
+	with opts[LOGO_OPT] do
+	begin
+		name	:= 'logo';
+		has_arg	:= 1;
+		flag	:= Nil;
+		value	:= #0;
+	end;
 
-    // Get Information
-    FLongest := 0;
-    for i := 0 to Length(FInfos)-1 do
-    begin    
-        tmp := SplitString(FWantedInfos[i], ':');
-        if (tmp[0] = 'env') then // Environment Variables
-        begin
-            FInfos[i] := GetEnv(tmp[1]);
-            if (tmp[1] = 'USER') and FUserAtMachine then FInfos[i] := FInfos[i] + '@' + UName('-n');
-        end
-        else if (tmp[0] = 'fl') then // Information to be grabbed from files
-        begin
-            // Apparently cant do a "case of" with strings in delphi mode, sucks
-            if (tmp[1] = 'MEM') then FInfos[i] := MemoryUsageString
-            else if (tmp[1] = 'CPU') then FInfos[i] := CPUString
-            else if (tmp[1] = 'OS') then FInfos[i] := FOSName
-            else if (tmp[1] = 'UPTIME') then FInfos[i] := Uptime
-            else if (tmp[1] = 'PKGS') then FInfos[i] := PkgCount
-            else if (tmp[1] = 'KERNEL') then FInfos[i] := UName('-r')
-            else if (tmp[1] = 'HOST') then FInfos[i] := GetHost;
-        end;
+	repeat
+		ch := GetLongOpts('cC:hi:', @opts[1], optIx);
+		case ch of
+		#0: begin
+			if optIx = 1 then
+				ShowHelp
+			else if optIx = CONFIG_OPT then
+				execOpts.config := OptArg
+			else if optIx = INFO_STYLE_OPT then
+				execOpts.infoStyles := ParseStyleList(OptArg)
+			else if optIx = TEXT_STYLE_OPT then
+				execOpts.textStyles := ParseStyleList(OptArg)
+			else if optIx = LOGO_STYLE_OPT then
+				execOpts.logoStyles := ParseStyleList(OptArg)
+			else if optIx = LOGO_OPT then
+				execOpts.logo := ParseLogo(OptArg);
+		end;
+		'h': ShowHelp;
+		'C': execOpts.color := ParseColor(OptArg);
+		'i': execOpts.infos := SplitString(OptArg, ',');
+		'?', ':': Halt(1);
+		end;
+	until ch = EndOfOptions;
+end;
 
-       if (Length(tmp[1]) > FLongest) then FLongest := Length(FWantedInfos[i]);
-    end;
-
-    FFormatString := '%'+IntToStr(FLongest)+'s';
-
-    // Write Information to console
-    for i := 0 to max(Length(FInfos), Length(FLogo))-1 do
-    begin
-        // OS Art
-        if (i < Length(FLogo)) then
-        begin
-            TextMode(FLogoStyle);
-            if FPrintColor then TextColor(Logos.GetColor(FOsName));
-            write(FLogo[i]);
-            if FPrintColor then AReset; // NormVideo resets the Color back to default
-        end
-        else
-            write(FSpacing);
-
-        // Information
-        if (i < Length(FWantedInfos)) then
-        begin
-            TextMode(FInfoLabelStyle);
-            if FPrintColor then TextColor(Logos.GetColor(FOsName));
-            write('     '+Format(FFormatString, 
-                [SplitString(FWantedInfos[i]+':', ':')[1]]));
-            if FPrintColor then AReset;
-
-            TextMode(FInfoTextStyle);
-            write(' '+FInfos[i]);
-        end;
-        
-        TextMode(tsResetAll);
-        writeln();
-    end;
-
-    writeln();
+var
+	execOpts: TExecOpts;
+	str: String;
+begin
+	ParseOpts(execOpts);
 end.
