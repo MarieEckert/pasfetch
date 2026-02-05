@@ -16,11 +16,12 @@ program pasfetch;
 
 uses
 	GetOpts,
-	uLogos,
-	uInfo,
+	Math,
 	SysUtils,
 	StrUtils,
-	Types;
+	Types,
+	uLogos,
+	uInfo;
 
 const VERSION = '2.0.0';
 
@@ -273,8 +274,25 @@ var
 	execOpts: TExecOpts;
 	str: String;
 	infoMap: TInfoMap;
-	ix: Integer;
+	i, widest: Integer;
 begin
 	ParseOpts(execOpts);
 	infoMap := CollectInformation(execOpts.infos);
+
+	widest := 0;
+	for i := 0 to infoMap.Count - 1 do
+		if Length(infoMap.Keys[i]) > widest then
+			widest := Length(infoMap.Keys[i]);
+
+	for i := 0 to Max(infoMap.Count, Length(ARCH)) - 1 do
+	begin
+		if i < Length(ARCH) then
+			Write(ARCH[i]);
+
+		if i < infoMap.Count then
+		begin
+			Write('    ', infoMap.Keys[i]:widest, ' ', infoMap.Data[i]);
+		end;
+		WriteLn;
+	end;
 end.

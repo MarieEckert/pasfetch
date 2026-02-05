@@ -1,134 +1,140 @@
+{$mode objfpc}
 unit uLogos;
 
-interface
-    uses uAnsiCrt;
+{$H+} {$codepage utf8}
+{$scopedenums on} {$writeableconst off} {$modeswitch arrayoperators}
 
-    function GetLogo(const os: String): String;
+interface
+    uses uAnsiCrt, Types;
+
+    function GetLogo(const os: String): TStringDynArray;
     function GetColor(const os: String): Byte;
 
     // LOGOS ARE FIXE WIDTH OF 
     const
-        ALPINE = '    /\ /\     ' + LineEnding +
-			     '   /  \  \    ' + LineEnding +
-			     '  /    \  \   ' + LineEnding +
-			     ' /      \  \  ' + LineEnding +
-			     '/        \  \ ' + LineEnding +
-			     '          \  \';
+        ALPINE : array of String = ('    /\ /\     ',
+			     '   /  \  \    ',
+			     '  /    \  \   ',
+			     ' /      \  \  ',
+			     '/        \  \ ',
+			     '          \  \');
         ALPINE_COLOR = BLUE;
                  {**************}
-        ARCH =   '      /\      ' + LineEnding +
-			     '     /  \     ' + LineEnding + 
-			     '    /\   \    ' + LineEnding + 
-			     '   /      \   ' + LineEnding +
-			     '  /   ,,   \  ' + LineEnding +
-			     ' /   |  |  -\ ' + LineEnding +
-			     '/_-''''    ''''-_\';
+        ARCH : array of String =   ('      /\      ',
+			     '     /  \     ', 
+			     '    /\   \    ', 
+			     '   /      \   ',
+			     '  /   ,,   \  ',
+			     ' /   |  |  -\ ',
+			     '/_-''''    ''''-_\');
         ARCH_COLOR = CYAN;
                     {***************}
-        ARCH_BANG = '          ____ ' + LineEnding +
-			        '      /\ /   /' + LineEnding +
-			        '     /  /   / ' + LineEnding +
-			        '    /   / /   ' + LineEnding +
-			        '   /   /_/\   ' + LineEnding +
-			        '  /   __   \  ' + LineEnding +
-			        ' /   /_/\   \ ' + LineEnding +
-			        '/_-''''    ''''-_\';
+        ARCH_BANG : array of String = ('          ____ ',
+			        '      /\ /   /',
+			        '     /  /   / ',
+			        '    /   / /   ',
+			        '   /   /_/\   ',
+			        '  /   __   \  ',
+			        ' /   /_/\   \ ',
+			        '/_-''''    ''''-_\');
         ARCH_BANG_COLOR = CYAN;
                     {**************}
-        ARCO =      '      /\      ' + LineEnding +
-			        '     /  \     ' + LineEnding +
-			        '    / /\ \    ' + LineEnding +
-			        '   / /  \ \   ' + LineEnding +
-			        '  / /    \ \  ' + LineEnding +
-			        ' / / _____\ \ ' + LineEnding +
-			        '/_/  `----.\_\';
+        ARCO : array of String =   ('      /\      ',
+			        '     /  \     ',
+			        '    / /\ \    ',
+			        '   / /  \ \   ',
+			        '  / /    \ \  ',
+			        ' / / _____\ \ ',
+			        '/_/  `----.\_\');
         ARCO_COLOR = BLUE;
                     {**************}
-        ARTIX = 
-			        '      /\       ' + LineEnding +
-			        '     /  \      ' + LineEnding +
-			        '    /`''.,\    ' + LineEnding +
-			        '   /     '',   ' + LineEnding +
-			        '  /      ,`\   ' + LineEnding +
-			        ' /   ,.''`.  \ ' + LineEnding +
-			        '/.,''`     `''.\ ';
+        ARTIX : array of String = 
+			        ('      /\       ',
+			        '     /  \      ',
+			        '    /`''.,\    ',
+			        '   /     '',   ',
+			        '  /      ,`\   ',
+			        ' /   ,.''`.  \ ',
+			        '/.,''`     `''.\ ');
         ARTIX_COLOR = CYAN;
                     {*********}
-        DEBIAN =    '  _____  ' + LineEnding +
-                    ' /  __ \ ' + LineEnding +
-                    '|  /    |' + LineEnding +
-                    '|  \___- ' + LineEnding +
-                    '-_       ' + LineEnding +
-                    '  --_    ' + LineEnding +
-                    '         ';
+        DEBIAN : array of String = ('  _____  ',
+                    ' /  __ \ ',
+                    '|  /    |',
+                    '|  \___- ',
+                    '-_       ',
+                    '  --_    ',
+                    '         ');
         DEBIAN_COLOR = RED;
                     {****************}
-        ARCH7 =     ' _______        ' + LineEnding +
-                    '|____   \ \     ' + LineEnding +
-                    '    / /  \      ' + LineEnding +
-                    '   / /__\ \     ' + LineEnding +
-                    '  / /____\ \    ' + LineEnding +
-                    ' /_/      \_\   ';
+        ARCH7 : array of String =  (' _______        ',
+                    '|____   \ \     ',
+                    '    / /  \      ',
+                    '   / /__\ \     ',
+                    '  / /____\ \    ',
+                    ' /_/      \_\   ');
         ARCH7_COLOR = CYAN;
                     {****************}
-        ELEMENTARY =
-                    '  _______       ' + LineEnding +
-                    ' / ____  \      ' + LineEnding +
-                    '/  |  /  /\     ' + LineEnding +
-                    '|__\ /  / |     ' + LineEnding +
-                    '\   /__/  /     ' + LineEnding +
-                    ' \_______/      ';
+        ELEMENTARY : array of String =(
+                    '  _______       ',
+                    ' / ____  \      ',
+                    '/  |  /  /\     ',
+                    '|__\ /  / |     ',
+                    '\   /__/  /     ',
+                    ' \_______/      ');
         ELEMENTARY_COLOR = CYAN;
                     {****************}
-        GENTOO =    '   _-----_      ' + LineEnding +
-                    '  (       \     ' + LineEnding +
-                    '  \    0   \    ' + LineEnding +
-                    '   \        )   ' + LineEnding +
-                    '   /      _/    ' + LineEnding +
-                    '  (     _-      ' + LineEnding +
-                    '  \____-        ';
+        GENTOO : array of String = ('   _-----_      ',
+                    '  (       \     ',
+                    '  \    0   \    ',
+                    '   \        )   ',
+                    '   /      _/    ',
+                    '  (     _-      ',
+                    '  \____-        ');
         GENTOO_COLOR = MAGENTA;
                     {****************}
-        MINT =      '  _____________ ' + LineEnding +
-                    ' |_            \' + LineEnding +
-                    '  |  | _____  | ' + LineEnding +
-                    '  |  | | | |  | ' + LineEnding +
-                    '  |  | | | |  | ' + LineEnding +
-                    '  |  \_____/  | ' + LineEnding +
-                    '  \___________/ ';
+        MINT : array of String =   ('  _____________ ',
+                    ' |_            \',
+                    '  |  | _____  | ',
+                    '  |  | | | |  | ',
+                    '  |  | | | |  | ',
+                    '  |  \_____/  | ',
+                    '  \___________/ ');
         MINT_COLOR = GREEN;
                     {*******************}
-        NETBSD =    '\\`-______,----__  ' + LineEnding +
-                    ' \\        __,---`_' + LineEnding +
-                    '  \\       `.____  ' + LineEnding +
-                    '   \\-______,----`-' + LineEnding +
-                    '    \\             ' + LineEnding +
-                    '     \\            ' + LineEnding +
-                    '      \\           ';
+        NETBSD : array of String = ('\\`-______,----__  ',
+                    ' \\        __,---`_',
+                    '  \\       `.____  ',
+                    '   \\-______,----`-',
+                    '    \\             ',
+                    '     \\            ',
+                    '      \\           ');
         NETBSD_COLOR = YELLOW;
                     {****************}
-        UBUNTU =    '          _     ' + LineEnding +
-                    '      ---(_)    ' + LineEnding +
-                    '  _/  ---  \    ' + LineEnding +
-                    ' (_) |   |      ' + LineEnding +
-                    '   \  --- _/    ' + LineEnding +
-                    '      ---(_)    ';
+        UBUNTU : array of String = ('          _     ',
+                    '      ---(_)    ',
+                    '  _/  ---  \    ',
+                    ' (_) |   |      ',
+                    '   \  --- _/    ',
+                    '      ---(_)    ');
         UBUNTU_COLOR = RED;
 
-        MACOS =     #27'[31m       .:''    ' + LineEnding +
-                    #27'[31m    _ :''_     ' + LineEnding +
-                    #27'[32m  .''`_`-''_``. ' + LineEnding +
-                    #27'[32m :________.-'' '+ LineEnding +
-                    #27'[33m :_______:    ' + LineEnding +
-                    #27'[34m  :_______`-; ' + LineEnding +
-                    #27'[35m   `._.-._.''  ';
+        MACOS : array of String =  (#27'[31m       .:''    ',
+                    #27'[31m    _ :''_     ',
+                    #27'[32m  .''`_`-''_``. ',
+                    #27'[32m :________.-'' ',
+                    #27'[33m :_______:    ',
+                    #27'[34m  :_______`-; ',
+                    #27'[35m   `._.-._.''  ');
+
+		FALLBACK : array of String = ('No Logo for distro');
 
     var
         FOverrideColor: byte;  // 0 = do not override color.
 
 implementation
 
-function GetLogo(const os: String): String;
+function GetLogo(const os: String): TStringDynArray;
 begin
     case os of
         '"Arch Linux"':       exit(ARCH);
@@ -145,7 +151,7 @@ begin
         '"Ubuntu"':           exit(UBUNTU);
         'MacOS':              exit(MACOS);
     else
-        exit('No Logo for distro');
+        exit(FALLBACK);
     end;
 end;
 
