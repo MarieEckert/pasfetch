@@ -272,6 +272,9 @@ end;
 var
 	execOpts: TExecOpts;
 	str: String;
+	infoMap: TInfoMap;
+	ix: Integer;
 begin
 	ParseOpts(execOpts);
+	infoMap := CollectInformation(execOpts.infos);
 end.

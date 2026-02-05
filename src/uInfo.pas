@@ -7,7 +7,10 @@ unit uInfo;
 interface
 
 uses
+	Dos,
 	fgl,
+	SysUtils,
+	StrUtils,
 	Types;
 
 type
@@ -19,6 +22,7 @@ function CPU: String;
 function PkgCount: String;
 function Uptime: String;
 function MemoryUsage: String;
+function Kernel: String;
 
 function CollectInformation(const infos: TStringDynArray): TInfoMap;
 
@@ -33,7 +37,42 @@ implementation
 {$ENDIF}
 
 function CollectInformation(const infos: TStringDynArray): TInfoMap;
+var
+	str, name, value: String;
 begin
+	result := TInfoMap.Create;
+
+	for str in infos do
+	begin
+		if StartsStr('env:', str) then
+		begin
+			name := Copy(str, 5, Length(str) - 4);
+			result.Add(name, GetEnv(name));
+			continue;
+		end;
+
+		name := UpperCase(str);
+		if name = 'MEM' then
+			value := MemoryUsage
+		else if name = 'OS' then
+			value := OsName
+		else if name = 'CPU' then
+			value := CPU
+		else if name = 'HOST' then
+			value := Host
+		else if name = 'UPTIME' then
+			value := Uptime
+		else if name = 'PKGCOUNT' then
+			value := PkgCount
+		else if name = 'KERNEL' then
+			value := Kernel
+		else begin
+			WriteLn(StdErr, 'error: invalid info "', name,'"');
+			Halt(4);
+		end;
+
+		result.Add(name, value);
+	end;
 end;
 
 end.
