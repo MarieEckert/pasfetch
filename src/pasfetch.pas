@@ -10,7 +10,9 @@ program pasfetch;
 {$ScopedEnums On} {$WriteableConst Off}
 
 uses
+	Dos,
 	GetOpts,
+	IniFiles,
 	Math,
 	SysUtils,
 	StrUtils,
@@ -23,6 +25,7 @@ const VERSION = '2.0.0';
 
 type
 	TExecOpts = record
+		useConfig	: Boolean;
 		config		: String;
 		infos		: TStringDynArray;
 		logo		: TLogo;
@@ -146,8 +149,11 @@ begin
 			if optIx = 1 then
 				ShowHelp
 			else if optIx = CONFIG_OPT then
-				execOpts.config := OptArg
-			else if optIx = INFO_STYLE_OPT then
+			begin
+				execOpts.config := OptArg;
+				execOpts.useConfig := True;
+				exit;
+			end else if optIx = INFO_STYLE_OPT then
 				execOpts.infoStyles := ParseStyleList(OptArg)
 			else if optIx = TEXT_STYLE_OPT then
 				execOpts.textStyles := ParseStyleList(OptArg)
@@ -163,6 +169,44 @@ begin
 		'?', ':': Halt(1);
 		end;
 	until ch = EndOfOptions;
+end;
+
+procedure LoadConfig(var execOpts: TExecOpts);
+var
+	path	: String;
+	config	: TIniFile;
+begin
+	if Length(execOpts.config) > 0 then
+		path := execOpts.config
+	else if GetEnv('XDG_CONFIG_HOME') <> '' then
+		path := GetEnv('XDG_CONFIG_HOME')+'/pasfetch/config.ini'
+	else
+		path := GetEnv('HOME')+'/.config/pasfetch/config.ini';
+
+	config := TIniFile.Create(path);
+
+	if not FileExists(path) then
+	begin
+		WriteLn(StdErr, 'error: could not find config file at "', path, '"');
+		Halt(5);
+	end;
+
+	execOpts.disableColor := config.ReadBool('PASFETCH', 'nocolor', False);
+	if not execOpts.disableColor then
+		execOpts.color :=
+			ParseColor(
+				Lowercase(config.ReadString('PASFETCH', 'color', 'auto'))
+			);
+	execOpts.infos :=
+		SplitString(config.ReadString('PASFETCH', 'infos', 'env:USER'), ',');
+	execOpts.logo :=
+		ParseLogo(Lowercase(config.ReadString('PASFETCH', 'logo', 'auto')));
+	execOpts.infoStyles :=
+		ParseStyleList(config.ReadString('PASFETCH', 'infolabelstyle', ''));
+	execOpts.textStyles :=
+		ParseStyleList(config.ReadString('PASFETCH', 'infotextstyle', ''));
+	execOpts.logoStyles :=
+		ParseStyleList(config.ReadString('PASFETCH', 'logostyle', ''));
 end;
 
 function BuildAnsiPrefix(const styles: TStyles; const colorStr: String): String;
@@ -185,6 +229,7 @@ var
 	i, widest	: Integer;
 
 	logoAscii	: TStringDynArray;
+	spacer		: String;
 
 	{ ansi formatting }
 	colorStr	: String;
@@ -214,7 +259,7 @@ begin
 	end else
 		colorStr := '';
 
-	logoPrefix	:= BuildAnsiPrefix(execOpts.logoStyles, colorStr);
+	logoPrefix	:= BuildAnsiPrefix(execOpts.logoStyles, colorStr) + ' ';
 	labelPrefix	:= BuildAnsiPrefix(execOpts.infoStyles, colorStr);
 	textPrefix	:= BuildAnsiPrefix(execOpts.textStyles, '');
 
@@ -223,10 +268,14 @@ begin
 		if Length(infoMap.Keys[i]) > widest then
 			widest := Length(infoMap.Keys[i]);
 
+	spacer := StringOfChar(' ', Length(logoAscii[High(logoAscii)]) + 1);
+
 	for i := 0 to Max(infoMap.Count, Length(logoAscii)) - 1 do
 	begin
 		if i < Length(logoAscii) then
-			Write(logoPrefix, logoAscii[i], #27'[0m');
+			Write(logoPrefix, logoAscii[i], #27'[0m')
+		else
+			Write(spacer);
 
 		if i < infoMap.Count then
 			Write(
@@ -248,5 +297,9 @@ var
 	execOpts	: TExecOpts;
 begin
 	ParseOpts(execOpts);
+
+	if execOpts.useConfig then
+		LoadConfig(execOpts);
+
 	Run(execOpts);
 end.

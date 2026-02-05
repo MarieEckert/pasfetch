@@ -63,7 +63,7 @@ begin
 			value := Host
 		else if name = 'UPTIME' then
 			value := Uptime
-		else if name = 'PKGCOUNT' then
+		else if name = 'PKGS' then
 			value := PkgCount
 		else if name = 'KERNEL' then
 			value := Kernel

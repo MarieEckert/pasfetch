@@ -203,6 +203,8 @@ begin
 		exit(TLogo.Ubuntu)
 	else if str = 'MacOS' then
 		exit(TLogo.MacOS)
+	else if str = 'auto' then
+		exit(TLogo.Auto)
 	else
 		exit(TLogo.Unknown);
 end;
