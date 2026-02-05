@@ -1,0 +1,186 @@
+= pasfetch(1)
+Marie Eckert
+v2.0.0
+:doctype: manpage
+:manmanual: PASFETCH
+:mansource: PASFETCH
+:man-linkstyle: pass:[blue R < >]
+
+== Name
+
+pasfetch - A System fetch program written in Pascal.
+
+== Synposis
+
+*pasfetch* [--config [PATH]] [-c] [-C] [-i] [MORE OPTIONS...]
+
+== Options
+
+Note that most options listed here can be overridden by a configuration file, if
+you explicitly choose to use one via the `--config` option.
+
+*-c*::
+	Disables colored output.
+
+*-C <color>*::
+	Override the color used for colored parts.
+	Color can be one of the following:
+		- black
+		- red
+		- green
+		- yellow
+		- blue
+		- magenta
+		- cyan
+		- white
+		- brightblack
+		- brightred
+		- brightgreen
+		- brightyellow
+		- brightblue
+		- brightmagent
+		- brightcyan
+		- brightwhite
+
+*-i <infos>*::
+	Specify what information points should be listed in a comma seperated list.
+	Points that are prefixed with `env:` reference arbitrary environment
+	variables. Besides environment variables, you can choose from the following:
+		- `MEM` Memory usage in GiB.
+		- `OS` Operating System name.
+		- `KERNEL` Kernel Version.
+		- `UPTIME` System Uptime.
+		- `CPU` The CPU model name.
+		- `HOST` The hostname of the system.
+		- `PKGS` Number of installed packages.
+
+*--info-style <styles>*::
+	Specify the styling for the the information point labels. Multiple styles
+	can be stacked using commas as seperators.
+	Valid styles are:
+		- normal
+		- bold
+		- dim
+		- italic
+		- underline
+		- slowblink
+		- rapidblink
+		- reverse
+
+*--text-style <styles>*::
+	Specify the styling for the information point values. Multiple styles
+	can be stacked using commas as seperators.
+	For valid styles, see the list in the reference for `--info-style`.
+
+*--logo-style <styles>*::
+	Specify the styling for the logo. Multiple styles can be stacked using
+	commas as seperators.
+	For valid styles, see the list in the reference for `--info-style`.
+
+*--config [CONFIG]*::
+	Use a configuration style instead of CLI arguments. If no config path is
+	explicitly specified, pasfetch searches a few standard locations for one.
+	See <<configuration>> for more information.
+
+== Configuration [[configuration]]
+
+=== Location
+
+pasfetch searches for a configuration in the following places if no location is
+explicitly specified.
+
+	1. $XDG_CONFIG_HOME/pasfetch/config.ini
+	2. $HOME/.config/pasfetch/pasfetch.ini
+
+=== Configuring
+
+The configuration is a list of ini-values all within the `PASFETCH` section.
+Accepted configuration points are:
+	- nocolor
+	- color
+	- infos
+	- infolabelstyle
+	- infotextstyle
+	- logostyle
+
+Every one of these values can be overriden using a commandline option.
+
+*nocolor=<true|false>*::
+	Disables colored output if set to true.
+
+*color=<color>*::
+	Override the color used for colored parts.
+	Color can be one of the following:
+		- black
+		- red
+		- green
+		- yellow
+		- blue
+		- magenta
+		- cyan
+		- white
+		- brightblack
+		- brightred
+		- brightgreen
+		- brightyellow
+		- brightblue
+		- brightmagent
+		- brightcyan
+		- brightwhite
+
+*infos=<infos>*::
+	Specify what information points should be listed in a comma seperated list.
+	All points must be prefixed with either `fl:` or `env:`. Points prefixed
+	with `fl:` are things that pasfetch fetches internally, points prefixed with
+	`env:` are environment variables.
+	Valid `fl:` points are:
+		- `fl:MEM` Memory usage in kB
+		- `fl:OS` Operating System name
+		- `fl:KERNEL` Kernel Version
+		- `fl:UPTIME` System Uptime
+		- `fl:CPU` The CPU model name
+		- `fl:HOST` The modelname of the host system
+		- `fl:HOSTNAME` The system's hostname
+		- `fl:USERATHOSTNAME` The hostname appended to the current user's name with an @ seperating the two.
+		- `fl:PKGS` Number of installed packages.
+
+*infolabelstyle=<style(s)>*::
+	Specify the styling for the the information point labels. Multiple styles
+	can be stacked using commas as seperators.
+	Valid styles are:
+		- normal
+		- bold
+		- dim
+		- italic
+		- underline
+		- slowblink
+		- rapidblink
+		- reverse
+
+*infotextstyle=<style(s)>*::
+	Specify the styling for the information point values. Multiple styles
+	can be stacked using commas as seperators.
+	For valid styles, see the list in the reference for `infolabelstyle`.
+
+*logostyle=<style(s)>*::
+	Specify the styling for the logo. Multiple styles can be stacked using
+	commas as seperators.
+	For valid styles, see the list in the reference for `infolabelstyle`.
+
+=== Example
+
+	[PASFETCH]
+	color=auto
+	INFOS=env:USER,OS,PKGS,KERNEL,env:SHELL,UPTIME,CPU,MEM
+	infotextstyle=bold,italic
+	infolabelstyle=bold
+	logostyle=bold
+
+== Copying
+
+Copyright (c) 2026, {author}. +
+This software is licensed under the ISC license.
+
+== Contributors
+
+array-in-a-matrix, polluks
