@@ -131,8 +131,80 @@ begin
 end;
 
 function MemoryUsage: String;
+
+	function Parse(const line: String): Integer;
+	var
+		p: Integer;
+	begin
+		p := Pos(':', line);
+		result := StrToInt(
+			Trim(
+				StringReplace(
+					Copy(line, p + 1, Length(line) - p),
+					'kB',
+					'',
+					[rfReplaceAll]
+				)
+			)
+		);
+	end;
+
+var
+	total,		free,
+	available,	buffers,
+	cached,		reclaimable	: Integer;
+	collected				: Integer;
+	used					: Real;
+	memInfo, line			: String;
+	memInfoFile				: TextFile;
 begin
-	result := 'TODO';
+	Result := '?';
+
+	try
+		AssignFile(memInfoFile, '/proc/meminfo');
+		ReSet(memInfoFile);
+
+		collected := 0;
+
+		while not eof(memInfoFile) do
+		begin
+			ReadLn(memInfoFile, line);
+			if StartsStr('MemTotal:', line) then
+				total := Parse(line)
+			else if StartsStr('MemFree', line) then
+				free := Parse(line)
+			else if StartsStr('MemAvailable', line) then
+				available := Parse(line)
+			else if StartsStr('Buffers', line) then
+				buffers := Parse(line)
+			else if StartsStr('Cached', line) then
+				cached := Parse(line)
+			else if StartsStr('SReclaimable', line) then
+				reclaimable := Parse(line)
+			else
+				continue;
+
+			Inc(collected);
+			if collected = 6 then
+				break;
+		end;
+
+		CloseFile(memInfoFile);
+	except
+		on e: EInOutError do
+		begin
+			WriteLn('error: EInOutError whilst trying to read meminfo.');
+			WriteLn('  -> ', e.Message);
+			Halt(4);
+		end;
+	end;
+
+	used := (total - free - buffers - cached - reclaimable);
+
+	result := Format(
+		'%.2f GiB / %.2f GiB',
+		[used / (1024 * 1024), total / (1024 * 1024)]
+	);
 end;
 
 function Kernel: String;
