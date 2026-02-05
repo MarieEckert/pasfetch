@@ -1,15 +1,10 @@
 {$mode objfpc}
 program pasfetch;
 
-{ pasfetch.pas ; System Fetcher written in Freepascal/Delphi }
-{ Author: Marie Eckert                                       }
-{ Contributors: array-in-a-matrix, polluks                   }
-{ Licensed under the ISC license                             }
-{************************************************************}
-{ NOTE: This program is my first real "project" in pascal    }
-{ thus most of the original code is a bit fugly. I plan to   }
-{ rewrite this at sometime in the future. If anyone else has }
-{ the motivation to do so, feel free to do it :)             }
+{ pasfetch.pas ; System Fetcher written in Free Pascal }
+{ Author: Marie Eckert                                 }
+{ Contributors: array-in-a-matrix, polluks             }
+{ Licensed under the ISC license                       }
 
 {$H+} {$CodePage UTF8}
 {$ScopedEnums On} {$WriteableConst Off}
@@ -31,6 +26,7 @@ type
 		config		: String;
 		infos		: TStringDynArray;
 		logo		: TLogo;
+		disableColor: Boolean;
 		color		: TColor;
 		infoStyles	: TStyles;
 		textStyles	: TStyles;
@@ -163,6 +159,7 @@ begin
 		'h': ShowHelp;
 		'C': execOpts.color := ParseColor(OptArg);
 		'i': execOpts.infos := SplitString(OptArg, ',');
+		'c': execOpts.disableColor := True;
 		'?', ':': Halt(1);
 		end;
 	until ch = EndOfOptions;
@@ -205,13 +202,17 @@ begin
 
 	logoAscii := GetLogo(execOpts.logo);
 
-	if execOpts.color = TColor.Auto then
-		execOpts.color := GetLogoColor(execOpts.logo);
+	if not execOpts.disableColor then
+	begin
+		if execOpts.color = TColor.Auto then
+			execOpts.color := GetLogoColor(execOpts.logo);
 
-	if execOpts.color >= TColor.BrightBlack then
-		colorStr := IntToStr(Integer(execOpts.color) + 82)
-	else
-		colorStr := IntToStr(Integer(execOpts.color) + 30);
+		if execOpts.color >= TColor.BrightBlack then
+			colorStr := IntToStr(Integer(execOpts.color) + 82)
+		else
+			colorStr := IntToStr(Integer(execOpts.color) + 30);
+	end else
+		colorStr := '';
 
 	logoPrefix	:= BuildAnsiPrefix(execOpts.logoStyles, colorStr);
 	labelPrefix	:= BuildAnsiPrefix(execOpts.infoStyles, colorStr);
