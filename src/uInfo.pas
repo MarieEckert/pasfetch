@@ -41,6 +41,7 @@ var
 	str, name, value: String;
 begin
 	result := TInfoMap.Create;
+	result.sorted := True;
 
 	for str in infos do
 	begin

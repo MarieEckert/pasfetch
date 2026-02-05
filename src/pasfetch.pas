@@ -20,42 +20,13 @@ uses
 	SysUtils,
 	StrUtils,
 	Types,
-	uLogos,
-	uInfo;
+	uAnsi,
+	uInfo,
+	uLogos;
 
 const VERSION = '2.0.0';
 
 type
-	TColor = (Black,
-			  Red,
-			  Green,
-			  Yellow,
-			  Blue,
-			  Magenta,
-			  Cyan,
-			  White,
-			  BrightBlack,
-			  BrightRed,
-			  BrightGreen,
-			  BrightYellow,
-			  BrightBlue,
-			  BrightMagenta,
-			  BrightCyan,
-			  BrightWhite);
-
-	TStyle = (Normal,
-			  Bold,
-			  Dim,
-			  Italic,
-			  Underline,
-			  SlowBlink,
-			  RapidBlink,
-			  Reverse);
-
-	TStyles = set of TStyle;
-
-	TLogo = (Auto, Arch);
-
 	TExecOpts = record
 		config		: String;
 		infos		: TStringDynArray;
@@ -65,81 +36,6 @@ type
 		textStyles	: TStyles;
 		logoStyles	: TStyles;
 	end;
-
-function ParseColor(const str: String): TColor;
-const
-	NAMES: array [TColor] of String = (
-		'black',
-		'red',
-		'green',
-		'yellow',
-		'blue',
-		'magenta',
-		'cyan',
-		'white',
-		'brightblack',
-		'brightred',
-		'brightgreen',
-		'brightyellow',
-		'brightblue',
-		'brightmagenta',
-		'brightcyan',
-		'brightwhite'
-	);
-var
-	color: TColor;
-begin
-	for color := Low(TColor) to High(TColor) do
-		if str = NAMES[color] then
-			exit(color);
-
-	WriteLn(StdErr, 'error: unknown color "', str, '"');
-	Halt(3);
-end;
-
-function ParseStyle(const str: String): TStyle;
-const
-	NAMES: array [TStyle] of String = (
-		'normal',
-		'bold',
-		'dim',
-		'italic',
-		'underline',
-		'slowblink',
-		'rapidblink',
-		'reverse'
-	);
-var
-	style: TStyle;
-begin
-	for style := Low(TStyle) to High(TStyle) do
-		if str = NAMES[style] then
-			exit(style);
-
-	WriteLn(StdErr, 'error: unknown style "', str, '"');
-	Halt(3);
-end;
-
-function ParseStyleList(const str: String): TStyles;
-var
-	currentPos	: Integer;
-	commaPos	: Integer;
-begin
-	currentPos := 1;
-	result := [];
-	repeat
-		commaPos := Pos(',', str, currentPos);
-		if commaPos = 0 then
-			commaPos := Length(str) + 1;
-		result += [ParseStyle(Copy(str, currentPos, commaPos - currentPos))];
-		currentPos := commaPos + 1;
-	until currentPos > Length(str);
-end;
-
-function ParseLogo(const str: String): TLogo;
-begin
-	{ TODO }
-end;
 
 procedure ShowHelp;
 const
@@ -201,6 +97,8 @@ var
 	opts	: array [1..6] of TOption;
 begin
 	execOpts := Default(TExecOpts);
+	execOpts.color := TColor.Auto;
+	execOpts.logo := TLogo.Auto;
 
 	with opts[1] do
 	begin
@@ -270,31 +168,84 @@ begin
 	until ch = EndOfOptions;
 end;
 
+function BuildAnsiPrefix(const styles: TStyles; const colorStr: String): String;
 var
-	execOpts: TExecOpts;
-	str: String;
-	infoMap: TInfoMap;
-	i, widest: Integer;
+	style: TStyle;
 begin
-	ParseOpts(execOpts);
+	result := #27'[';
+	for style in styles do
+		result += IntToStr(Integer(style)) + ';';
+
+	if Length(colorStr) > 0 then
+		result += colorStr + 'm'
+	else
+		result[High(result)] := 'm';
+end;
+
+procedure Run(execOpts: TExecOpts);
+var
+	infoMap		: TInfoMap;
+	i, widest	: Integer;
+
+	logoAscii	: TStringDynArray;
+
+	{ ansi formatting }
+	colorStr	: String;
+	logoPrefix	: String;
+	labelPrefix	: String;
+	textPrefix	: String;
+begin
 	infoMap := CollectInformation(execOpts.infos);
+
+	if execOpts.logo = TLogo.Auto then
+		if infoMap.Find('OS', i) then
+			execOpts.logo := ParseLogo(infoMap.Data[i])
+		else
+			execOpts.logo := ParseLogo(OsName);
+
+	logoAscii := GetLogo(execOpts.logo);
+
+	if execOpts.color = TColor.Auto then
+		execOpts.color := GetLogoColor(execOpts.logo);
+
+	if execOpts.color >= TColor.BrightBlack then
+		colorStr := IntToStr(Integer(execOpts.color) + 82)
+	else
+		colorStr := IntToStr(Integer(execOpts.color) + 30);
+
+	logoPrefix	:= BuildAnsiPrefix(execOpts.logoStyles, colorStr);
+	labelPrefix	:= BuildAnsiPrefix(execOpts.infoStyles, colorStr);
+	textPrefix	:= BuildAnsiPrefix(execOpts.textStyles, '');
 
 	widest := 0;
 	for i := 0 to infoMap.Count - 1 do
 		if Length(infoMap.Keys[i]) > widest then
 			widest := Length(infoMap.Keys[i]);
 
-	for i := 0 to Max(infoMap.Count, Length(ARCH)) - 1 do
+	for i := 0 to Max(infoMap.Count, Length(logoAscii)) - 1 do
 	begin
-		if i < Length(ARCH) then
-			Write(ARCH[i]);
+		if i < Length(logoAscii) then
+			Write(logoPrefix, logoAscii[i], #27'[0m');
 
 		if i < infoMap.Count then
-		begin
-			Write('    ', infoMap.Keys[i]:widest, ' ', infoMap.Data[i]);
-		end;
+			Write(
+				'    ',
+				labelPrefix,
+				infoMap.Keys[i]:widest,
+				#27'[0m ',
+				textPrefix,
+				infoMap.Data[i],
+				#27'[0m'
+			);
 		WriteLn;
 	end;
 
 	WriteLn;
+end;
+
+var
+	execOpts	: TExecOpts;
+begin
+	ParseOpts(execOpts);
+	Run(execOpts);
 end.
