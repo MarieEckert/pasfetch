@@ -1,5 +1,10 @@
 # pasfetch
+
 A System fetch program written in Pascal.
+
+## Screenshot
+
+![screenshot of pasfetch with the example config](/screenshot.png "Screenshot")
 
 ## Installation
 
