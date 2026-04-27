@@ -18,7 +18,7 @@ LICENSEDIR ?= /usr/share/licenses/pasfetch
 #     Do not use a list of default informations when no information is specified
 #     via the command line or via a configuration file.
 
-FPC_FLAGS   = -FE"obj/" -dNO_CPU_NAME_NORMALIZE
+FPC_FLAGS   = -FE"obj/"
 
 .PHONY: debug
 debug:
