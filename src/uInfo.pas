@@ -8,13 +8,16 @@ interface
 
 uses
 	Dos,
-	fgl,
 	SysUtils,
 	StrUtils,
 	Types;
 
 type
-	TInfoMap = specialize TFPGMap<String, String>;
+	TInfo = record
+		name, value: String;
+	end;
+
+	TInfoDynArray = array of TInfo;
 
 function Host: String;
 function OsName: String;
@@ -24,7 +27,7 @@ function Uptime: String;
 function MemoryUsage: String;
 function Kernel: String;
 
-function CollectInformation(const infos: TStringDynArray): TInfoMap;
+function CollectInformation(const infos: TStringDynArray): TInfoDynArray;
 
 implementation
 
@@ -36,43 +39,47 @@ implementation
 	{$ERROR unsupported platform}
 {$ENDIF}
 
-function CollectInformation(const infos: TStringDynArray): TInfoMap;
+function CollectInformation(const infos: TStringDynArray): TInfoDynArray;
 var
-	str, name, value: String;
+	str	: String;
+	ix	: SizeInt;
 begin
-	result := TInfoMap.Create;
-	result.sorted := True;
+	SetLength(result, Length(infos));
+
+	ix := Low(result);
 
 	for str in infos do
 	begin
 		if StartsStr('env:', str) then
 		begin
-			name := Copy(str, 5, Length(str) - 4);
-			result.Add(name, GetEnv(name));
+			result[ix].name := Copy(str, 5, Length(str) - 4);
+			result[ix].value := GetEnv(result[ix].name);
+
+			Inc(ix);
 			continue;
 		end;
 
-		name := UpperCase(str);
-		if name = 'MEM' then
-			value := MemoryUsage
-		else if name = 'OS' then
-			value := OsName
-		else if name = 'CPU' then
-			value := CPU
-		else if name = 'HOST' then
-			value := Host
-		else if name = 'UPTIME' then
-			value := Uptime
-		else if name = 'PKGS' then
-			value := PkgCount
-		else if name = 'KERNEL' then
-			value := Kernel
+		result[ix].name := UpperCase(str);
+		if result[ix].name = 'MEM' then
+			result[ix].value := MemoryUsage
+		else if result[ix].name = 'OS' then
+			result[ix].value := OsName
+		else if result[ix].name = 'CPU' then
+			result[ix].value := CPU
+		else if result[ix].name = 'HOST' then
+			result[ix].value := Host
+		else if result[ix].name = 'UPTIME' then
+			result[ix].value := Uptime
+		else if result[ix].name = 'PKGS' then
+			result[ix].value := PkgCount
+		else if result[ix].name = 'KERNEL' then
+			result[ix].value := Kernel
 		else begin
-			WriteLn(StdErr, 'error: invalid info "', name,'"');
+			WriteLn(StdErr, 'error: invalid info "', result[ix].name,'"');
 			Halt(4);
 		end;
 
-		result.Add(name, value);
+		Inc(ix);
 	end;
 end;
 

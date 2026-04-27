@@ -225,7 +225,7 @@ end;
 
 procedure Run(execOpts: TExecOpts);
 var
-	infoMap		: TInfoMap;
+	infos		: TInfoDynArray;
 	i, widest	: Integer;
 
 	logoAscii	: TStringDynArray;
@@ -237,13 +237,10 @@ var
 	labelPrefix	: String;
 	textPrefix	: String;
 begin
-	infoMap := CollectInformation(execOpts.infos);
+	infos := CollectInformation(execOpts.infos);
 
 	if execOpts.logo = TLogo.Auto then
-		if infoMap.Find('OS', i) then
-			execOpts.logo := ParseLogo(infoMap.Data[i])
-		else
-			execOpts.logo := ParseLogo(OsName);
+		execOpts.logo := ParseLogo(OsName);
 
 	logoAscii := GetLogo(execOpts.logo);
 
@@ -264,27 +261,27 @@ begin
 	textPrefix	:= BuildAnsiPrefix(execOpts.textStyles, '');
 
 	widest := 0;
-	for i := 0 to infoMap.Count - 1 do
-		if Length(infoMap.Keys[i]) > widest then
-			widest := Length(infoMap.Keys[i]);
+	for i := 0 to High(infos) do
+		if Length(infos[i].name) > widest then
+			widest := Length(infos[i].name);
 
 	spacer := StringOfChar(' ', Length(logoAscii[High(logoAscii)]) + 1);
 
-	for i := 0 to Max(infoMap.Count, Length(logoAscii)) - 1 do
+	for i := 0 to Max(Length(infos), Length(logoAscii)) - 1 do
 	begin
 		if i < Length(logoAscii) then
 			Write(logoPrefix, logoAscii[i], #27'[0m')
 		else
 			Write(spacer);
 
-		if i < infoMap.Count then
+		if i < Length(infos) then
 			Write(
 				'    ',
 				labelPrefix,
-				infoMap.Keys[i]:widest,
+				infos[i].name:widest,
 				#27'[0m ',
 				textPrefix,
-				infoMap.Data[i],
+				infos[i].value,
 				#27'[0m'
 			);
 		WriteLn;
