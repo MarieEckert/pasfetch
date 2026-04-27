@@ -2,12 +2,12 @@
 .\"     Title: pasfetch
 .\"    Author: Marie Eckert
 .\" Generator: Asciidoctor 2.0.26
-.\"      Date: 2026-02-06
+.\"      Date: 2026-04-28
 .\"    Manual: PASFETCH
 .\"    Source: PASFETCH
 .\"  Language: English
 .\"
-.TH "PASFETCH" "1" "2026-02-06" "PASFETCH" "PASFETCH"
+.TH "PASFETCH" "1" "2026-04-28" "PASFETCH" "PASFETCH"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -305,6 +305,9 @@ variables. Besides environment variables, you can choose from the following:
 .  IP \(bu 2.3
 .\}
 \f(CRPKGS\fP Number of installed packages.
+If no information is specified and pasfetch is not built with the
+\f(CRNO_DEFAULT_INFOS\fP flag, the following list of infos will be displayed:
+\f(CROS, HOST, KERNEL, env:SHELL, CPU, MEM\fP
 .RE
 .RE
 .sp

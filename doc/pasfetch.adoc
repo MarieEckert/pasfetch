@@ -1,6 +1,6 @@
 = pasfetch(1)
 Marie Eckert
-v2.0.0
+v2.1.0
 :doctype: manpage
 :manmanual: PASFETCH
 :mansource: PASFETCH
@@ -53,6 +53,9 @@ you explicitly choose to use one via the `--config` option.
 		- `CPU` The CPU model name.
 		- `HOST` The hostname of the system.
 		- `PKGS` Number of installed packages.
+	If no information is specified and pasfetch is not built with the
+	`NO_DEFAULT_INFOS` flag, the following list of infos will be displayed:
+	`OS, HOST, KERNEL, env:SHELL, CPU, MEM`
 
 *--info-style <styles>*::
 	Specify the styling for the the information point labels. Multiple styles
