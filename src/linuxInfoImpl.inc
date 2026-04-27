@@ -89,6 +89,10 @@ begin
 		if split[0] = 'model' then
 		begin
 			s := SplitString(s, ':')[1];
+{$IFNDEF NO_CPU_NAME_NORMALIZE}
+			while Pos('  ', s) > 0 do
+				s := StringReplace(s, '  ', ' ', [rfReplaceAll]);
+{$ENDIF}
 			exit(Copy(s, 2, Length(s) - 1));
 		end;
 	end;
