@@ -33,6 +33,8 @@ The install locations can be adjusted via the following variables:
 - `MANDIR` (default `/usr/share/man/man1/`)
 - `LICENSEDIR` (default `/usr/share/licenses/pasfetch`)
 
+See the Makefile for information on build- / featureflags you can set.
+
 ### Arch
 
 pasfetch is on the [AUR](https://aur.archlinux.org/packages/pasfetch). You can install it using paru: `paru -S pasfetch` <br>
