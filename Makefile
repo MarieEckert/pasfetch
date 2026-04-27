@@ -29,7 +29,7 @@ doc/pasfetch.1: doc/pasfetch.adoc
 	asciidoctor -b manpage $^
 
 .PHONY: release
-release: doc/pasfetch.1
+release: clean doc/pasfetch.1
 	@mkdir -p obj
 	fpc src/pasfetch.pas $(FPC_FLAGS) -O4 -XX -Xs
 
@@ -37,7 +37,7 @@ release: doc/pasfetch.1
 clean:
 	find -iname '*.o' -type f -exec rm {} ';'
 	find -iname '*.ppu' -type f -exec rm {} ';'
-	rm -f pasfetch
+	rm -f obj/pasfetch
 
 .PHONY: install
 install: release
