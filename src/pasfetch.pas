@@ -63,7 +63,7 @@ const
 '    -C <COLOR>',
 '        Set which color should be used for colored output',
 '    -i <INFOS>',
-'        Comma seperated list of information to be displayed. See pafetch(1)',
+'        Comma seperated list of information to be displayed. See pasfetch(1)',
 '        for more information.',
 '    --info-style <STYLES>',
 '        Comma seperated list specifying how to style information labels.',
