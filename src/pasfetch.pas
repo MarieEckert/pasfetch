@@ -301,5 +301,18 @@ begin
 	if execOpts.useConfig then
 		LoadConfig(execOpts);
 
+{$IFNDEF NO_DEFAULT_INFORMATION}
+	if Length(execOpts.infos) = 0 then
+		execOpts.infos := [
+			'OS',
+			'HOST',
+			'KERNEL',
+			'UPTIME',
+			'env:SHELL',
+			'CPU',
+			'MEM'
+		];
+{$ENDIF}
+
 	Run(execOpts);
 end.
