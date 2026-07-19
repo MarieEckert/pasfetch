@@ -5,6 +5,8 @@
 uses
 	Classes,
 	Math,
+	Pipes,
+	Process,
 	uUtil;
 
 function GetSingleLine(const path: String; const linenum: Integer): String;
@@ -102,8 +104,117 @@ begin
 end;
 
 function PkgCount: String;
+
+function NixPkgCount: String;
+const
+	BUFFER_SIZE = 4096;
+var
+	nixStore    : TProcess;
+	output      : RawByteString;
+	errorOutput : RawByteString;
+	lines       : TStringList;
+	uniqueNames : TStringList;
+	line        : string;
+	dashPos     : SizeInt;
+	i           : Integer;
+
+	procedure ReadAvailable(
+		stream: TInputPipeStream;
+		var destination: RawByteString
+	)    ;
+	var
+		buffer    : array[0..BUFFER_SIZE - 1] of Byte;
+		oldLength : SizeInt;
+		bytesRead : LongInt;
+	begin
+		while stream.NumBytesAvailable > 0 do
+		begin
+			bytesRead := stream.Read(buffer, SizeOf(buffer));
+			if bytesRead <= 0 then
+				Break;
+
+			oldLength := Length(destination);
+			SetLength(destination, oldLength + bytesRead);
+			Move(
+				buffer[0],
+				destination[oldLength + 1],
+				bytesRead
+			);
+		end;
+	end;
+
+begin
+	output := '';
+	errorOutput := '';
+
+	nixStore := TProcess.Create(nil);
+	try
+		nixStore.Executable := 'nix-store';
+		nixStore.Parameters.Add('-q');
+		nixStore.Parameters.Add('--requisites');
+		nixStore.Parameters.Add('/run/current-system');
+		nixStore.Options := [poUsePipes];
+
+		nixStore.Execute;
+
+		repeat
+			ReadAvailable(nixStore.Output, output);
+			ReadAvailable(nixStore.Stderr, errorOutput);
+
+			if nixStore.Running then
+				Sleep(1);
+		until not nixStore.Running;
+
+		ReadAvailable(nixStore.Output, output);
+		ReadAvailable(nixStore.Stderr, errorOutput);
+		nixStore.WaitOnExit;
+
+		if nixStore.ExitStatus <> 0 then
+		begin
+			raise Exception.CreateFmt(
+				'nix-store failed with exit code %d: %s',
+				[
+					nixStore.ExitStatus,
+					Trim(string(errorOutput))
+				]
+			);
+		end;
+	finally
+		nixStore.Free;
+	end;
+
+	lines := TStringList.Create;
+	uniqueNames := TStringList.Create;
+	try
+		lines.Text := string(output);
+
+		uniqueNames.CaseSensitive := True;
+		uniqueNames.Sorted := True;
+		uniqueNames.Duplicates := dupIgnore;
+
+		for i := 0 to lines.Count - 1 do
+		begin
+			line := lines[i];
+
+			dashPos := Pos('-', line);
+			if dashPos > 0 then
+				Delete(line, 1, dashPos);
+
+			uniqueNames.Add(line);
+		end;
+
+		Result := IntToStr(uniqueNames.Count);
+	finally
+		uniqueNames.Free;
+		lines.Free;
+	end;
+end;
+
 begin
 	result := '0';
+
+	if Lowercase(OsName) = 'nixos' then
+		Exit(NixPkgCount);
 
 	if DirectoryExists('/var/lib/pacman/local') then
 		Result := IntToStr(CountEntries('/var/lib/pacman/local') - 1);
