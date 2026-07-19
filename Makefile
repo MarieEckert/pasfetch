@@ -1,6 +1,7 @@
-BINDIR     ?= /usr/bin
-MANDIR     ?= /usr/share/man/man1
-LICENSEDIR ?= /usr/share/licenses/pasfetch
+PREFIX     ?= /usr
+BINDIR     ?= $(PREFIX)/bin
+MANDIR     ?= $(PREFIX)/share/man/man1
+LICENSEDIR ?= $(PREFIX)/share/licenses/pasfetch
 
 # ============================================================================ #
 # Additional build- & featureflags.
@@ -41,6 +42,6 @@ clean:
 
 .PHONY: install
 install: release
-	install -m 0755 ./obj/pasfetch $(BINDIR)
-	install -m 0644 ./doc/pasfetch.1 $(MANDIR)
+	install -Dm 0755 ./obj/pasfetch $(BINDIR)/pasfetch
+	install -Dm 0644 ./doc/pasfetch.1 $(MANDIR)/pasfetch.1
 	install -Dm 0644 LICENSE $(LICENSEDIR)/LICENSE
