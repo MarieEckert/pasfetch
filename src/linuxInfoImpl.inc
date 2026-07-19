@@ -217,3 +217,8 @@ const
 begin
 	result := GetSingleLine(PATH, 1);
 end;
+
+function Shell: String;
+begin
+	Exit(ExtractFileName(GetEnv('SHELL')));
+end;
