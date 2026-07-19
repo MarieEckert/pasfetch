@@ -1,9 +1,14 @@
 {
   description = "";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-  outputs = { nixpkgs, ... }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      ... 
+    }:
     let
       systems = [
         "x86_64-linux"
@@ -11,21 +16,33 @@
       ];
 
       forAllSystems =
-        function:
-        nixpkgs.lib.genAttrs systems (
-          system:
-          function (import nixpkgs { inherit system; })
-        );
+        nixpkgs.lib.genAttrs systems;
     in
     {
+      packages = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+          };
+        in
+        {
+          default =
+            pkgs.callPackage ./nix/package.nix { };
+        }
+      );
+
       devShells = forAllSystems (
-        pkgs:
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+          };
+        in
         {
           default = pkgs.mkShell {
-            packages = [
-              pkgs.asciidoctor
-              pkgs.fpc
-              pkgs.gnumake
+            inputsFrom = [
+              self.packages.${system}.default
             ];
           };
         }

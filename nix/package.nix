@@ -3,7 +3,7 @@
   fpc,
   gnumake,
   asciidoctor
-}
+}:
 
 stdenv.mkDerivation {
   pname = "pasfetch";
