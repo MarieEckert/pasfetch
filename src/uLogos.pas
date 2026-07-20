@@ -25,6 +25,7 @@ type
 			 NetBSD,
 			 Ubuntu,
 			 MacOS,
+			 NixOS,
 			 Unknown);
 
 function ParseLogo(const str: String): TLogo;
@@ -171,6 +172,22 @@ const
 				#27'[35m   `._.-._.''  '
 	);
 
+	NIXOS : array of String = (
+				#27'[34m     _'#27'[36m    ___    _        ',
+				#27'[34m    +o\'#27'[36m   \  \  / \       ',
+				#27'[34m    \oo\'#27'[36m   \  \/  /       ',
+				#27'[34m  ,oo+oo+ooo'#27'[36m\   ,/'#27'[34m +\     ',
+				#27'[34m <ooooooooooo'#27'[36m\  \'#27'[34m /os;    ',
+				#27'[36m     /``/     \'#27'[34m  ,oo/     ',
+				#27'[36m,─~─''  /       \'#27'[34m,oooooo,  ',
+				#27'[36m\__   ;'#27'[34ms       /oo/sss>`  ',
+				#27'[36m  /  /'#27'[34mso\'#27'[36m_____'#27'[34m/ss/'#27'[36m____    ',
+				#27'[36m `, / '#27'[34m\oo\'#27'[36m    ```     /   ',
+				#27'[36m  \/ '#27'[34m/sooo\'#27'[36m─~~.  .─~─`    ',
+				#27'[34m    /so/\oo\'#27'[36m   \  \       ',
+				#27'[34m    \o/  \s+\'#27'[36m   \__\      '
+	);
+
 	FALLBACK : array of String = ('No Logo for distro');
 
 implementation
@@ -203,6 +220,8 @@ begin
 		exit(TLogo.Ubuntu)
 	else if str = 'MacOS' then
 		exit(TLogo.MacOS)
+	else if str = 'NixOS' then
+		exit(TLogo.NixOS)
 	else if str = 'auto' then
 		exit(TLogo.Auto)
 	else
@@ -225,6 +244,7 @@ begin
 	TLogo.NetBSD:		exit(NETBSD);
 	TLogo.Ubuntu:		exit(UBUNTU);
 	TLogo.MacOS:		exit(MACOS);
+	TLogo.NixOS:		exit(NIXOS);
 	else
 		exit(FALLBACK);
 	end;
@@ -245,6 +265,7 @@ begin
 	TLogo.Mint:			exit(MINT_COLOR);
 	TLogo.NetBSD:		exit(NETBSD_COLOR);
 	TLogo.Ubuntu:		exit(UBUNTU_COLOR);
+	TLogo.NixOS:		exit(ARCH_COLOR);
 	else
 		exit(ARCH_COLOR);
 	end;
