@@ -1,6 +1,6 @@
 = pasfetch(1)
 Marie Eckert
-v2.1.0
+v2.2.0
 :doctype: manpage
 :manmanual: PASFETCH
 :mansource: PASFETCH

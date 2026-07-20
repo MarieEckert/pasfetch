@@ -7,7 +7,7 @@
 
 stdenv.mkDerivation {
   pname = "pasfetch";
-  version = "2.1.0-r3";
+  version = "2.2.0";
 
   src = ../.;
 
