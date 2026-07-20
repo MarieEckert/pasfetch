@@ -136,7 +136,7 @@ Every one of these values can be overriden using a commandline option.
 	Points prefixed with `env:` are environment variables. Everything else is a
 	builtin.
 	Builtins:
-		- `HOST` Model name of the host machine
+		- `HOST` Machine hostname
 		- `OSNAME` Name of the operating system
 		- `CPU` CPU Model Name
 		- `PKGCOUNT` Total count of installed packages
