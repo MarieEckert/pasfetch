@@ -26,6 +26,7 @@ function PkgCount: String;
 function Uptime: String;
 function MemoryUsage: String;
 function Kernel: String;
+function Shell: String;
 
 function CollectInformation(const infos: TStringDynArray): TInfoDynArray;
 
@@ -74,6 +75,8 @@ begin
 			result[ix].value := PkgCount
 		else if result[ix].name = 'KERNEL' then
 			result[ix].value := Kernel
+		else if result[ix].name = 'SHELL' then
+			result[ix].value := Shell
 		else begin
 			WriteLn(StdErr, 'error: invalid info "', result[ix].name,'"');
 			Halt(4);

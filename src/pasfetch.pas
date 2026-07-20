@@ -305,7 +305,7 @@ begin
 			'HOST',
 			'KERNEL',
 			'UPTIME',
-			'env:SHELL',
+			'SHELL',
 			'CPU',
 			'MEM'
 		];

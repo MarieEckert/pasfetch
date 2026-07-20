@@ -133,19 +133,17 @@ Every one of these values can be overriden using a commandline option.
 
 *infos=<infos>*::
 	Specify what information points should be listed in a comma seperated list.
-	All points must be prefixed with either `fl:` or `env:`. Points prefixed
-	with `fl:` are things that pasfetch fetches internally, points prefixed with
-	`env:` are environment variables.
-	Valid `fl:` points are:
-		- `fl:MEM` Memory usage in kB
-		- `fl:OS` Operating System name
-		- `fl:KERNEL` Kernel Version
-		- `fl:UPTIME` System Uptime
-		- `fl:CPU` The CPU model name
-		- `fl:HOST` The modelname of the host system
-		- `fl:HOSTNAME` The system's hostname
-		- `fl:USERATHOSTNAME` The hostname appended to the current user's name with an @ seperating the two.
-		- `fl:PKGS` Number of installed packages.
+	Points prefixed with `env:` are environment variables. Everything else is a
+	builtin.
+	Builtins:
+		- `HOST` Machine hostname
+		- `OSNAME` Name of the operating system
+		- `CPU` CPU Model Name
+		- `PKGCOUNT` Total count of installed packages
+		- `UPTIME` Current system uptime
+		- `MEMORYUSAGE` Memory usage in GiB
+		- `KERNEL` Kernel Version
+		- `SHELL` Name of the shell(-binary) in use (according to env:SHELL)
 
 *infolabelstyle=<style(s)>*::
 	Specify the styling for the the information point labels. Multiple styles

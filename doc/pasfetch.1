@@ -2,12 +2,12 @@
 .\"     Title: pasfetch
 .\"    Author: Marie Eckert
 .\" Generator: Asciidoctor 2.0.26
-.\"      Date: 2026-04-28
+.\"      Date: 1980-01-01
 .\"    Manual: PASFETCH
 .\"    Source: PASFETCH
 .\"  Language: English
 .\"
-.TH "PASFETCH" "1" "2026-04-28" "PASFETCH" "PASFETCH"
+.TH "PASFETCH" "1" "1980-01-01" "PASFETCH" "PASFETCH"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -656,10 +656,9 @@ brightwhite
 \fBinfos=<infos>\fP
 .RS 4
 Specify what information points should be listed in a comma seperated list.
-All points must be prefixed with either \f(CRfl:\fP or \f(CRenv:\fP. Points prefixed
-with \f(CRfl:\fP are things that pasfetch fetches internally, points prefixed with
-\f(CRenv:\fP are environment variables.
-Valid \f(CRfl:\fP points are:
+Points prefixed with \f(CRenv:\fP are environment variables. Everything else is a
+builtin.
+Builtins:
 .sp
 .RS 4
 .ie n \{\
@@ -669,7 +668,7 @@ Valid \f(CRfl:\fP points are:
 .  sp -1
 .  IP \(bu 2.3
 .\}
-\f(CRfl:MEM\fP Memory usage in kB
+\f(CRHOST\fP Machine hostname
 .RE
 .sp
 .RS 4
@@ -680,7 +679,7 @@ Valid \f(CRfl:\fP points are:
 .  sp -1
 .  IP \(bu 2.3
 .\}
-\f(CRfl:OS\fP Operating System name
+\f(CROSNAME\fP Name of the operating system
 .RE
 .sp
 .RS 4
@@ -691,7 +690,7 @@ Valid \f(CRfl:\fP points are:
 .  sp -1
 .  IP \(bu 2.3
 .\}
-\f(CRfl:KERNEL\fP Kernel Version
+\f(CRCPU\fP CPU Model Name
 .RE
 .sp
 .RS 4
@@ -702,7 +701,7 @@ Valid \f(CRfl:\fP points are:
 .  sp -1
 .  IP \(bu 2.3
 .\}
-\f(CRfl:UPTIME\fP System Uptime
+\f(CRPKGCOUNT\fP Total count of installed packages
 .RE
 .sp
 .RS 4
@@ -713,7 +712,7 @@ Valid \f(CRfl:\fP points are:
 .  sp -1
 .  IP \(bu 2.3
 .\}
-\f(CRfl:CPU\fP The CPU model name
+\f(CRUPTIME\fP Current system uptime
 .RE
 .sp
 .RS 4
@@ -724,7 +723,7 @@ Valid \f(CRfl:\fP points are:
 .  sp -1
 .  IP \(bu 2.3
 .\}
-\f(CRfl:HOST\fP The modelname of the host system
+\f(CRMEMORYUSAGE\fP Memory usage in GiB
 .RE
 .sp
 .RS 4
@@ -735,7 +734,7 @@ Valid \f(CRfl:\fP points are:
 .  sp -1
 .  IP \(bu 2.3
 .\}
-\f(CRfl:HOSTNAME\fP The system\(cqs hostname
+\f(CRKERNEL\fP Kernel Version
 .RE
 .sp
 .RS 4
@@ -746,18 +745,7 @@ Valid \f(CRfl:\fP points are:
 .  sp -1
 .  IP \(bu 2.3
 .\}
-\f(CRfl:USERATHOSTNAME\fP The hostname appended to the current user\(cqs name with an @ seperating the two.
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\f(CRfl:PKGS\fP Number of installed packages.
+\f(CRSHELL\fP Name of the shell(\-binary) in use (according to env:SHELL)
 .RE
 .RE
 .sp
